@@ -163,3 +163,51 @@ def test_call_endpoint_filters_params_and_finds_image_slot(tmp_path):
 
     from mc3d.ai.image_to_3d import _pick_model
     assert _pick_model((str(model), {"value": str(textured)})) == str(textured)
+
+
+class FakeSpace:
+    def __init__(self, endpoints, results):
+        self.endpoints = endpoints
+        self.results = results
+        self.calls = []
+
+    def view_api(self, return_format=None, print_info=True):
+        return {"named_endpoints": {n: {"parameters": p} for n, p in self.endpoints.items()}}
+
+    def predict(self, api_name, **kwargs):
+        self.calls.append(api_name)
+        result = self.results[api_name]
+        if isinstance(result, Exception):
+            raise result
+        return result
+
+
+def test_trellis_uses_one_shot_endpoint(tmp_path, monkeypatch):
+    from mc3d.ai import image_to_3d
+
+    glb = tmp_path / "out.glb"
+    glb.write_bytes(b"x")
+    img = {"parameter_name": "image", "component": "Image"}
+    space = FakeSpace(
+        {"/start_session": [], "/preprocess_image": [img],
+         "/generate_and_extract_glb": [img, {"parameter_name": "seed", "component": "Slider"}]},
+        {"/start_session": None, "/preprocess_image": "not-a-file.png",
+         "/generate_and_extract_glb": ("video.mp4", str(glb), str(glb))})
+    monkeypatch.setattr(image_to_3d, "get_client", lambda *a, **k: space)
+    monkeypatch.setattr(image_to_3d, "_handle", lambda p: p)
+    assert image_to_3d.trellis("in.png", log=lambda *_: None) == str(glb)
+    assert space.calls[-1] == "/generate_and_extract_glb"
+
+
+def test_hunyuan_falls_back_to_shape_only(tmp_path, monkeypatch):
+    from mc3d.ai import image_to_3d
+
+    glb = tmp_path / "white_mesh.glb"
+    glb.write_bytes(b"x")
+    img = {"parameter_name": "image", "component": "Image"}
+    space = FakeSpace({"/generation_all": [img], "/shape_generation": [img]},
+                      {"/generation_all": RuntimeError("NameError"),
+                       "/shape_generation": (str(glb), "<html>")})
+    monkeypatch.setattr(image_to_3d, "get_client", lambda *a, **k: space)
+    monkeypatch.setattr(image_to_3d, "_handle", lambda p: p)
+    assert image_to_3d.hunyuan3d("in.png", log=lambda *_: None) == str(glb)

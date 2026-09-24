@@ -33,8 +33,8 @@ def _add_convert_args(p: argparse.ArgumentParser) -> None:
 
 def _add_ai_args(p: argparse.ArgumentParser, text: bool) -> None:
     p.add_argument("--model-backend", default="auto",
-                   choices=("auto", "trellis", "hunyuan3d", "custom"),
-                   help="image-to-3D Hugging Face Space (auto tries trellis, then hunyuan3d)")
+                   choices=("auto", "trellis", "hunyuan3d", "hunyuan3d21", "custom"),
+                   help="image-to-3D Hugging Face Space (auto tries them in this order)")
     if text:
         p.add_argument("--image-backend", default="auto", choices=("auto", "pollinations", "flux"))
         p.add_argument("--raw-prompt", action="store_true",

@@ -79,7 +79,7 @@ mc3d api-info trellis-community/TRELLIS
 | `--up z` | 入力モデルの上方向 (GLBは y、STL/OBJ は z のことが多い) |
 | `--density 8` | 表面サンプル密度。殻に穴が空く場合は上げる |
 | `--seed N` | 生成シード |
-| `--model-backend trellis\|hunyuan3d\|custom` | 画像→3Dのバックエンド固定 |
+| `--model-backend trellis\|hunyuan3d\|hunyuan3d21\|custom` | 画像→3Dのバックエンド固定 |
 | `--image-backend pollinations\|flux` | テキスト→画像のバックエンド固定 |
 | `--raw-prompt` | プロンプトに「単体・白背景」等の補助語を付けない |
 | `--hf-token` | Hugging Face トークン (既定は `$HF_TOKEN`) |

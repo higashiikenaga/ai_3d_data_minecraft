@@ -24,13 +24,39 @@ def get_client(space: str, hf_token: str | None = None):
         return Client(space, hf_token=token, verbose=False)
 
 
-def endpoint_params(client, api_name: str) -> list[dict] | None:
-    """Return the parameter descriptions of an endpoint, or None if unavailable."""
+def _api_info(client) -> dict | None:
     try:
-        info = client.view_api(return_format="dict", print_info=False)
+        return client.view_api(return_format="dict", print_info=False) or {}
     except Exception:
         return None
-    endpoint = (info or {}).get("named_endpoints", {}).get(api_name)
+
+
+def list_endpoints(client) -> list[str] | None:
+    """Names of the Space's named endpoints, or None if the schema is unavailable."""
+    info = _api_info(client)
+    if info is None:
+        return None
+    return list(info.get("named_endpoints", {}))
+
+
+def pick_endpoint(client, candidates: tuple[str, ...]) -> str:
+    """Return the first candidate endpoint the Space actually exposes."""
+    available = list_endpoints(client)
+    if available is None:
+        return candidates[0]
+    for name in candidates:
+        if name in available:
+            return name
+    raise RuntimeError(f"none of {', '.join(candidates)} found; "
+                       f"Space exposes: {', '.join(available) or '(nothing)'}")
+
+
+def endpoint_params(client, api_name: str) -> list[dict] | None:
+    """Return the parameter descriptions of an endpoint, or None if unavailable."""
+    info = _api_info(client)
+    if info is None:
+        return None
+    endpoint = info.get("named_endpoints", {}).get(api_name)
     if endpoint is None:
         return None
     return endpoint.get("parameters", [])
