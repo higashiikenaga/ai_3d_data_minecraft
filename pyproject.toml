@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mc3d"
+version = "0.1.0"
+description = "Generate WorldEdit .schem files from text/images via free AI 3D APIs"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy>=1.22",
+    "trimesh>=4.0",
+    "pillow>=9.0",
+    "scipy>=1.8",
+    "requests>=2.25",
+    "gradio_client>=1.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "nbtlib>=2.0"]
+
+[project.scripts]
+mc3d = "mc3d.cli:main"
+
+[tool.setuptools]
+packages = ["mc3d", "mc3d.ai"]
