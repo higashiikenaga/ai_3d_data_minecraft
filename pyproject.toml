@@ -24,4 +24,4 @@ dev = ["pytest", "nbtlib>=2.0"]
 mc3d = "mc3d.cli:main"
 
 [tool.setuptools]
-packages = ["mc3d", "mc3d.ai"]
+packages = ["mc3d", "mc3d.ai", "mc3d.local"]

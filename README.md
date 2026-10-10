@@ -66,6 +66,55 @@ mc3d api-info trellis-community/TRELLIS
    ```
    既定ではプレイヤーの足元を中心に配置されます(`--no-center` で角基準)。
 
+## Minecraft サーバー内のコマンドから生成する
+
+`/ai3d <プロンプト>` と打つだけで、生成から貼り付けまでゲーム内で完結します。
+
+```
+/ai3d ─▶ AI3Dプラグイン ──HTTP──▶ mc3d serve (V100 / 無料クラウドAPI)
+                │                     text→image→3D→.schem
+                │◀── .schem をダウンロード ──┘
+                ├─ WorldEdit の schematics/ に保存 (サーバーのリロード不要)
+                ├─ 貼り付け範囲を表示 (WorldEditCUI なら選択範囲、無ければパーティクル)
+                └─ [貼り付け] [ここに移動] [キャンセル] をクリックで確認 → //undo 可
+```
+
+WorldEdit は `//schem load` のたびにファイルを読み込むため、
+**schem を追加してもサーバーのリロードは不要**です。プラグインは保存した schem をそのまま読み込みます。
+
+### 1. 生成サーバーを起動
+
+```bash
+mc3d serve --backend local    # V100などローカルGPU (docs/GPU_SETUP.md)
+mc3d serve --backend cloud    # GPUが無い間は無料のHugging Face Spaceを使う
+```
+
+### 2. プラグインを導入 (Paper / Spigot 1.20.1 以降 + WorldEdit 7.2.15 以降)
+
+```bash
+cd minecraft-plugin
+./gradlew build          # Windows は gradlew.bat build
+# → build/libs/AI3D-0.1.0.jar を plugins/ にコピーしてサーバーを起動
+```
+
+GitHub Actions でもビルドしているので、Actions の実行結果から `AI3D-plugin` をダウンロードしても構いません。
+設定は `plugins/AI3D/config.yml` で、サーバーURL・APIキー・最大サイズなどを変えられます。
+
+### 3. ゲーム内コマンド
+
+| コマンド | 説明 |
+|---|---|
+| `/ai3d <プロンプト> [--size N] [--fill] [--quality] [--seed N] [--palette wool,concrete] [--height]` | 生成開始 (プロンプトは英語推奨) |
+| `/ai3d confirm` | 表示中の範囲に貼り付け (`//undo` で戻せる) |
+| `/ai3d here` | 今いる場所に範囲を移動 |
+| `/ai3d cancel` | キャンセル |
+| `/ai3d status` | 生成状況 |
+| `/ai3d load <名前>` | 保存済み schem を確認付きで貼り付け |
+| `/ai3d reload` | config.yml を再読み込み |
+
+権限: `ai3d.use` (使用), `ai3d.admin` (max-size 超え・reload)。既定ではどちらも OP のみです。
+生成したものは WorldEdit のクリップボードにも入るため、`//rotate` してから `//paste` することもできます。
+
 ## 主なオプション
 
 | オプション | 説明 |

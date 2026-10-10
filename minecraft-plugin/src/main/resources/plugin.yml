@@ -1,0 +1,18 @@
+name: AI3D
+version: '${version}'
+main: dev.mc3d.ai3d.AI3DPlugin
+api-version: '1.20'
+depend: [WorldEdit]
+description: Generate builds from text with AI 3D models and paste them with WorldEdit
+commands:
+  ai3d:
+    description: AIで3Dモデルを生成して建築として貼り付ける
+    usage: /ai3d <prompt> [--size N] [--fill] [--quality] [--seed N]
+    permission: ai3d.use
+permissions:
+  ai3d.use:
+    description: /ai3d を使用できる
+    default: op
+  ai3d.admin:
+    description: max-size を超えるサイズを指定できる
+    default: op

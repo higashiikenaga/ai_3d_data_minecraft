@@ -1,0 +1,7 @@
+# Local GPU backend (mc3d serve --backend local). Install PyTorch first, matching your CUDA:
+#   pip install torch==2.4.0 torchvision==0.19.0 --index-url https://download.pytorch.org/whl/cu121
+# Then install TRELLIS from https://github.com/microsoft/TRELLIS (see docs/GPU_SETUP.md).
+diffusers>=0.30
+transformers
+accelerate
+xformers==0.0.27.post2

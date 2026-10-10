@@ -1,0 +1,23 @@
+# mc3d serve (Python) のURL。同じPCなら変更不要
+server-url: "http://127.0.0.1:8765"
+# mc3d serve --api-key と同じ値 (空なら無し)
+api-key: ""
+
+default-size: 48
+# ai3d.admin 権限が無いプレイヤーの上限
+max-size: 128
+# 既定のブロック群 (空なら全部): concrete,wool,terracotta,natural,wood,building,mineral
+palette: ""
+# 既定で内部を埋めるか
+fill: false
+
+# 生成状況の確認間隔と、諦めるまでの時間
+poll-interval-seconds: 2
+timeout-seconds: 900
+
+# 貼り付け確認待ちの間、範囲をパーティクルで表示する (WorldEditCUI 無しでも見える)
+preview-particles: true
+# 確認待ちを自動キャンセルするまでの秒数
+pending-expire-seconds: 600
+# 貼り付け時に空気ブロックを無視する (既存の地形を消さない)
+paste-ignore-air: true

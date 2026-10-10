@@ -97,7 +97,27 @@ def main(argv: list[str] | None = None) -> int:
     p_info.add_argument("space", help="e.g. trellis-community/TRELLIS")
     p_info.add_argument("--hf-token", default=os.environ.get("HF_TOKEN"))
 
+    p_serve = sub.add_parser("serve", help="run the HTTP job server for the Minecraft plugin")
+    p_serve.add_argument("--host", default="127.0.0.1")
+    p_serve.add_argument("--port", type=int, default=8765)
+    p_serve.add_argument("--backend", choices=("local", "cloud"), default="local",
+                         help="local = TRELLIS on your GPU, cloud = free Hugging Face Spaces")
+    p_serve.add_argument("--out-dir", default=os.path.join("output", "server"))
+    p_serve.add_argument("--api-key", default=os.environ.get("MC3D_API_KEY"),
+                         help="require this X-API-Key header (default $MC3D_API_KEY)")
+    p_serve.add_argument("--quality", action="store_true",
+                         help="bake textures (slower); default uses fast vertex colors")
+    p_serve.add_argument("--steps", type=int, default=12, help="TRELLIS sampling steps")
+    p_serve.add_argument("--no-warmup", action="store_true")
+    p_serve.add_argument("--hf-token", default=os.environ.get("HF_TOKEN"))
+
     args = parser.parse_args(argv)
+
+    if args.command == "serve":
+        from .server import serve
+        serve(args.host, args.port, args.backend, args.out_dir, args.hf_token, args.api_key,
+              args.quality, args.steps, not args.no_warmup)
+        return 0
 
     try:
         if args.command == "api-info":

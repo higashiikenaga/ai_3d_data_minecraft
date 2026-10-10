@@ -211,3 +211,47 @@ def test_hunyuan_falls_back_to_shape_only(tmp_path, monkeypatch):
     monkeypatch.setattr(image_to_3d, "get_client", lambda *a, **k: space)
     monkeypatch.setattr(image_to_3d, "_handle", lambda p: p)
     assert image_to_3d.hunyuan3d("in.png", log=lambda *_: None) == str(glb)
+
+
+def test_server_job_roundtrip(tmp_path, monkeypatch):
+    import json as _json
+    import threading
+    import time
+    import urllib.request
+    from http.server import ThreadingHTTPServer
+
+    from mc3d import server
+
+    glb = tmp_path / "cube.glb"
+    _textured_glb(str(glb))
+
+    class FakeGen(server.Generator):
+        def run(self, job, set_stage):
+            set_stage("voxelize→schem")
+            res = server.model_to_schem(str(glb), str(tmp_path / f"{job.id}.schem"),
+                                        server.ConvertOptions(size=job.params["size"]),
+                                        log=lambda *_: None)
+            job.shape, job.schem_path = list(res.shape), res.schem_path
+
+    manager = server.JobManager(FakeGen("cloud", str(tmp_path)))
+    httpd = ThreadingHTTPServer(("127.0.0.1", 0), server.make_handler(manager, "k"))
+    threading.Thread(target=httpd.serve_forever, daemon=True).start()
+    base = f"http://127.0.0.1:{httpd.server_address[1]}"
+
+    def req(path, body=None):
+        r = urllib.request.Request(base + path, headers={"X-API-Key": "k"},
+                                   data=_json.dumps(body).encode() if body else None)
+        with urllib.request.urlopen(r) as resp:
+            return resp.read()
+
+    job = _json.loads(req("/jobs", {"prompt": "cube", "size": 8}))
+    for _ in range(100):
+        status = _json.loads(req(f"/jobs/{job['id']}"))
+        if status["status"] in ("done", "error"):
+            break
+        time.sleep(0.05)
+    assert status["status"] == "done" and status["shape"] == [8, 8, 8]
+    assert req(f"/jobs/{job['id']}/schem")[:2] == b"\x1f\x8b"
+    with pytest.raises(urllib.error.HTTPError):
+        urllib.request.urlopen(base + "/health")  # no api key
+    httpd.shutdown()
