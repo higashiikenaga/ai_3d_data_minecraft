@@ -4,3 +4,5 @@ __pycache__/
 output/
 build/
 .gradle/
+third_party/
+.venv/

@@ -5,19 +5,25 @@ Tuned for a single 16 GB GPU such as a Tesla V100:
   * TRELLIS attention via xformers (flash-attn 2 does not support V100 / sm70)
   * SDXL-Turbo is moved to CPU while TRELLIS runs so both fit in 16 GB
 
-Install TRELLIS following https://github.com/microsoft/TRELLIS (Linux / WSL2
-recommended) and make sure ``import trellis`` works in this environment.
+Install TRELLIS (docs/GPU_SETUP.md, scripts/windows/ for native Windows) and
+point MC3D_TRELLIS_DIR at the checkout, or put it on PYTHONPATH.
 """
 
 from __future__ import annotations
 
 import os
+import sys
 import threading
 
 import numpy as np
 
 os.environ.setdefault("ATTN_BACKEND", "xformers")
 os.environ.setdefault("SPCONV_ALGO", "native")
+
+# Location of the TRELLIS checkout (instead of setting PYTHONPATH, handy on Windows).
+_TRELLIS_DIR = os.environ.get("MC3D_TRELLIS_DIR")
+if _TRELLIS_DIR and os.path.isdir(_TRELLIS_DIR) and _TRELLIS_DIR not in sys.path:
+    sys.path.insert(0, os.path.abspath(_TRELLIS_DIR))
 
 TRELLIS_MODEL = os.environ.get("MC3D_TRELLIS_MODEL", "microsoft/TRELLIS-image-large")
 T2I_MODEL = os.environ.get("MC3D_T2I_MODEL", "stabilityai/sdxl-turbo")

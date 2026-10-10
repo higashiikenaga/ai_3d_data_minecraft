@@ -73,6 +73,11 @@ def _output(args, default_stem: str) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
+    for stream in (sys.stdout, sys.stderr):  # Windows consoles may not be UTF-8
+        try:
+            stream.reconfigure(errors="replace")
+        except (AttributeError, ValueError):
+            pass
     parser = argparse.ArgumentParser(
         prog="mc3d",
         description="Generate WorldEdit .schem files from text, images or 3D models "
@@ -110,10 +115,20 @@ def main(argv: list[str] | None = None) -> int:
     p_serve.add_argument("--steps", type=int, default=12, help="TRELLIS sampling steps")
     p_serve.add_argument("--no-warmup", action="store_true")
     p_serve.add_argument("--hf-token", default=os.environ.get("HF_TOKEN"))
+    p_serve.add_argument("--trellis-dir", default=os.environ.get("MC3D_TRELLIS_DIR"),
+                         help="path of the TRELLIS checkout (default $MC3D_TRELLIS_DIR)")
+
+    p_doc = sub.add_parser("doctor", help="check the local GPU / TRELLIS installation")
+    p_doc.add_argument("--trellis-dir", default=os.environ.get("MC3D_TRELLIS_DIR"))
 
     args = parser.parse_args(argv)
 
+    if args.command == "doctor":
+        from .doctor import run
+        return run(args.trellis_dir)
     if args.command == "serve":
+        if args.trellis_dir:
+            os.environ["MC3D_TRELLIS_DIR"] = args.trellis_dir
         from .server import serve
         serve(args.host, args.port, args.backend, args.out_dir, args.hf_token, args.api_key,
               args.quality, args.steps, not args.no_warmup)

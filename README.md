@@ -25,6 +25,17 @@ Hugging Face の ZeroGPU はログインなしだと1日あたりのGPU枠が小
 
 ## インストール
 
+**Windows** はダブルクリックかコマンドプロンプトで実行できます。
+
+```bat
+scripts\windows\setup.bat            rem 基本 (無料クラウドAPI・変換)
+scripts\windows\setup_gpu.bat        rem ローカルGPU (V100など) — docs/GPU_SETUP.md
+scripts\windows\start_server.bat     rem /ai3d 用の生成サーバー起動
+scripts\windows\build_plugin.bat C:\minecraft\server\plugins   rem プラグインをビルドしてコピー
+```
+
+その他のOS:
+
 ```bash
 pip install -e .          # Python 3.9+
 # テストも実行する場合
@@ -85,7 +96,7 @@ WorldEdit は `//schem load` のたびにファイルを読み込むため、
 ### 1. 生成サーバーを起動
 
 ```bash
-mc3d serve --backend local    # V100などローカルGPU (docs/GPU_SETUP.md)
+mc3d serve --backend local    # V100などローカルGPU (docs/GPU_SETUP.md, 事前に mc3d doctor で確認)
 mc3d serve --backend cloud    # GPUが無い間は無料のHugging Face Spaceを使う
 ```
 

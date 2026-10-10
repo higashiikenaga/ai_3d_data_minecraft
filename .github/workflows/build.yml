@@ -6,7 +6,10 @@ on:
 
 jobs:
   python:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -14,9 +17,14 @@ jobs:
           python-version: "3.11"
       - run: pip install -e ".[dev]"
       - run: pytest -q
+      - run: python -m mc3d doctor || true
+        shell: bash
 
   plugin:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     defaults:
       run:
         working-directory: minecraft-plugin
@@ -26,8 +34,35 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - run: chmod +x gradlew && ./gradlew build --no-daemon
-      - uses: actions/upload-artifact@v4
+      - if: runner.os != 'Windows'
+        run: chmod +x gradlew && ./gradlew build --no-daemon
+      - if: runner.os == 'Windows'
+        run: .\gradlew.bat build --no-daemon
+        shell: cmd
+      - if: runner.os != 'Windows'
+        uses: actions/upload-artifact@v4
         with:
           name: AI3D-plugin
           path: minecraft-plugin/build/libs/*.jar
+
+  windows-scripts:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Parse PowerShell script
+        shell: pwsh
+        run: |
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile("scripts/windows/setup_gpu.ps1", [ref]$null, [ref]$errors) | Out-Null
+          if ($errors) { $errors; exit 1 }
+      - name: setup.bat + CLI smoke test
+        shell: cmd
+        run: |
+          call scripts\windows\setup.bat || exit /b 1
+          call .venv\Scripts\activate.bat
+          python -c "import trimesh; trimesh.creation.box().export('box.glb')"
+          mc3d model box.glb --size 16 -o output\box.schem || exit /b 1
+          dir output
